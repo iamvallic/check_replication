@@ -45,6 +45,7 @@ function set_argument {
 		PASSWORD=$1
 		;;
 	*)
+		echo -e "Unknown argument $1"
 		echo -e "usage: $0 --m MASTER_IP [--mp MASTER_PORT] --s SLAVE_IP [--sp SLAVE_PORT] --db DATABASE --user USER --passwd PASSWORD"
 		exit 1
 		;;
@@ -53,8 +54,13 @@ function set_argument {
 
 for arg in "$@"
 do
-    set_argument "$arg"
+	set_argument "$arg"
 done
+
+
+: "${MASTER_PORT:=3306}"
+: "${SLAVE_PORT:=3306}"
+
 
 echo "MASTER=$MASTER"
 echo "MASTER_PORT=$MASTER_PORT"
@@ -64,18 +70,13 @@ echo "DATABASE=$DATABASE"
 echo "USER=$USER"
 
 
-case "$1"
-MASTER = $1
+#SLAVE='62.182.157.4'
+#SLAVE_PORT='3310'
 
-MASTER_PORT="${1="'3306'
+#REPL_PASSWD='kF5m*&-@)_(@-fQ2l'
 
-SLAVE='62.182.157.4'
-SLAVE_PORT='3310'
-
-REPL_PASSWD='kF5m*&-@)_(@-fQ2l'
-
-MYSQL_MASTER="/usr/bin/mysql -u replicant -h $MASTER -P $MASTER_PORT -p$REPL_PASSWD"
-MYSQL_SLAVE="/usr/bin/mysql -u replicant -h $SLAVE -P $SLAVE_PORT -p$REPL_PASSWD"
+MYSQL_MASTER="/usr/bin/mysql -u $USER -h $MASTER -P $MASTER_PORT -p$REPL_PASSWD"
+MYSQL_SLAVE="/usr/bin/mysql -u $USER -h $SLAVE -P $SLAVE_PORT -p$REPL_PASSWD"
 
 
 STATUS_MASTER=$($MYSQL_MASTER -e "SHOW MASTER STATUS\G")
@@ -108,6 +109,8 @@ echo "MASTER_LOG_POS = $MASTER_LOG_POS"
 
 ### CHECKS ###
 
+function check_for_errors {
+
 ## Check For Last Error ##
 if [ "$LAST_ERRNO" != 0 ]
 then
@@ -135,6 +138,12 @@ elif [ "$SECONDS_BEHIND_MASTER" -gt 3600 ]
 then
     ERRORS=("${ERRORS[@]}" "The Slave is mpre then hour behind the master (Seconds_Behind_Master)")
 fi
+
+}
+
+function print_errors {
+	printf '%s\n' "${ERRORS[@]}"
+}
 
 while [[ "$SECONDS_BEHIND_MASTER" != "0" && "$SLAVE_READ_POS" != "$MASTER_LOG_POS" ]];
 do
@@ -168,6 +177,9 @@ do
 	echo "SLAVE_READ_POS = $SLAVE_READ_POS"
 	echo "MASTER_LOG_FILE = $MASTER_LOG_FILE"
 	echo "MASTER_LOG_POS = $MASTER_LOG_POS"
+
+	check_for_errors
+        print_errors
 
 done
 
