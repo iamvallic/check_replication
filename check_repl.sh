@@ -78,6 +78,9 @@ echo "USER=$USER"
 MYSQL_MASTER="/usr/bin/mysql -u $USER -h $MASTER -P $MASTER_PORT -p$REPL_PASSWD"
 MYSQL_SLAVE="/usr/bin/mysql -u $USER -h $SLAVE -P $SLAVE_PORT -p$REPL_PASSWD"
 
+### END VARIABLES DEFENITION ###
+
+function check_reptication {
 
 STATUS_MASTER=$($MYSQL_MASTER -e "SHOW MASTER STATUS\G")
 STATUS_SLAVE=$($MYSQL_SLAVE -e "SHOW SLAVE 'PARSER' STATUS\G")
@@ -108,6 +111,8 @@ echo "MASTER_LOG_FILE = $MASTER_LOG_FILE"
 echo "MASTER_LOG_POS = $MASTER_LOG_POS"
 
 ### CHECKS ###
+}
+
 
 function check_for_errors {
 
@@ -145,39 +150,43 @@ function print_errors {
 	printf '%s\n' "${ERRORS[@]}"
 }
 
+check_reptication
+check_for_errors
+print_errors
+
 while [[ "$SECONDS_BEHIND_MASTER" != "0" && "$SLAVE_READ_POS" != "$MASTER_LOG_POS" ]];
 do
+
 	echo "sleep 5 munutes ..."
 	sleep 1m
-	STATUS_MASTER=$($MYSQL_MASTER -e "SHOW MASTER STATUS\G")
-	STATUS_SLAVE=$($MYSQL_SLAVE -e "SHOW SLAVE 'PARSER' STATUS\G")
-
-	### SLAVE ###
-	LAST_ERRNO=$(grep "Last_Errno" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-	LAST_ERROR=$(grep "Last_Error" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-	SECONDS_BEHIND_MASTER=$( grep "Seconds_Behind_Master" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-	IO_IS_RUNNING=$(grep "Slave_IO_Running" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-	SQL_IS_RUNNING=$(grep "Slave_SQL_Running" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-	SLAVE_MASTER_LOG_FILE=$(grep " Master_Log_File" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-	SLAVE_READ_POS=$(grep "Read_Master_Log_Pos" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
+#	STATUS_MASTER=$($MYSQL_MASTER -e "SHOW MASTER STATUS\G")
+#	STATUS_SLAVE=$($MYSQL_SLAVE -e "SHOW SLAVE 'PARSER' STATUS\G")
+#
+#	### SLAVE ###
+#	LAST_ERRNO=$(grep "Last_Errno" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
+#	LAST_ERROR=$(grep "Last_Error" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
+#	SECONDS_BEHIND_MASTER=$( grep "Seconds_Behind_Master" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
+#	IO_IS_RUNNING=$(grep "Slave_IO_Running" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
+#	SQL_IS_RUNNING=$(grep "Slave_SQL_Running" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
+#	SLAVE_MASTER_LOG_FILE=$(grep " Master_Log_File" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
+#	SLAVE_READ_POS=$(grep "Read_Master_Log_Pos" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
 
 	### MASTER ###
-	MASTER_LOG_FILE=$(grep " File" <<< "$STATUS_MASTER" | awk '{ print $2 }')
-	MASTER_LOG_POS=$(grep " Position" <<< "$STATUS_MASTER" | awk '{ print $2 }')
-
-	ERRORS=()
+#	MASTER_LOG_FILE=$(grep " File" <<< "$STATUS_MASTER" | awk '{ print $2 }')
+#	MASTER_LOG_POS=$(grep " Position" <<< "$STATUS_MASTER" | awk '{ print $2 }')
+#	ERRORS=()
 
 	### PRINT VALUES ###
-	echo "NEW VALUES:"
-	echo "LAST_ERRNO = $LAST_ERRNO"
-	echo "SECONDS_BEHIND_MASTER = $SECONDS_BEHIND_MASTER"
-	echo "IO_IS_RUNNING = $IO_IS_RUNNING"
-	echo "SQL_IS_RUNNING = $SQL_IS_RUNNING"
-	echo "SLAVE_MASTER_LOG_FILE = $SLAVE_MASTER_LOG_FILE"
-	echo "SLAVE_READ_POS = $SLAVE_READ_POS"
-	echo "MASTER_LOG_FILE = $MASTER_LOG_FILE"
-	echo "MASTER_LOG_POS = $MASTER_LOG_POS"
-
+#	echo "NEW VALUES:"
+#	echo "LAST_ERRNO = $LAST_ERRNO"
+#	echo "SECONDS_BEHIND_MASTER = $SECONDS_BEHIND_MASTER"
+#	echo "IO_IS_RUNNING = $IO_IS_RUNNING"
+#	echo "SQL_IS_RUNNING = $SQL_IS_RUNNING"
+#	echo "SLAVE_MASTER_LOG_FILE = $SLAVE_MASTER_LOG_FILE"
+#	echo "SLAVE_READ_POS = $SLAVE_READ_POS"
+#	echo "MASTER_LOG_FILE = $MASTER_LOG_FILE"
+#	echo "MASTER_LOG_POS = $MASTER_LOG_POS"
+	check_reptication
 	check_for_errors
         print_errors
 
