@@ -1,15 +1,15 @@
 #!/bin/bash
 
-if [ "$#" -eq "0" ]
+if [[ "$#" -eq "0" ]]
   then
     echo -e "No arguments supplied"
-    echo -e "usage: $0 --m MASTER_IP [--mp MASTER_PORT] --s SLAVE_IP [--sp SLAVE_PORT] --db DATABASE --user USER --passwd PASSWORD"
+    echo -e "usage: $0 --m MASTER_IP [--mp MASTER_PORT] --s SLAVE_IP [--sp SLAVE_PORT] --cn SLAVE_CONNECTION_NAME --user USER --passwd PASSWORD"
     exit 1
 fi
 
-if [ "$#" -ne 5 ]; then
-    echo "Illegal number of arguments"
-    echo -e "usage: $0 --m MASTER_IP [--mp MASTER_PORT] --s SLAVE_IP [--sp SLAVE_PORT] --db DATABASE --user USER --passwd PASSWORD"
+if [[ "$#" -lt 10 ]]; then
+    echo "Illegal number of arguments set only $# arguments"
+    echo -e "usage: $0 --m MASTER_IP [--mp MASTER_PORT] --s SLAVE_IP [--sp SLAVE_PORT] --cn SLAVE_CONNECTION_NAME --user USER --passwd PASSWORD"
     exit 1
 fi
 
@@ -21,41 +21,89 @@ fi
 ### VARIABLES ###
 #MASTER='62.182.157.2'
 
-function set_argument {
-	case "$1" in
-	"--m")
-		MASTER=$1
-		;;
-	"--mp")
-		MASTER_PORT=$1
-		;;
-	"--s")
-		SLAVE=$1
-		;;
-	"--sp")
-		SLAVE_PORT=$1
-		;;
-	"--db")
-		DATABASE=$1
-		;;
-	"--user")
-		USER=$1
-		;;
-	"--passwd")
-		PASSWORD=$1
-		;;
-	*)
-		echo -e "Unknown argument $1"
-		echo -e "usage: $0 --m MASTER_IP [--mp MASTER_PORT] --s SLAVE_IP [--sp SLAVE_PORT] --db DATABASE --user USER --passwd PASSWORD"
-		exit 1
-		;;
-	esac
+
+
+#function set_argument {
+#	case "$1" in
+#	"--m")
+#		MASTER=$2
+#3		;;
+#	"--mp")
+#		MASTER_PORT=$2
+#		;;
+#	"--s")
+#		SLAVE=$2
+#		;;
+#	"--sp")
+#		SLAVE_PORT=$2
+#		;;
+#	"--db")
+#		DATABASE=$2
+#		;;
+#	"--user")
+#		USER=$2
+#		;;
+#	"--passwd")
+#		PASSWORD=$2
+#		;;
+#	*)
+#		echo -e "Unknown argument $1"
+#		echo -e "usage: $0 --m MASTER_IP [--mp MASTER_PORT] --s SLAVE_IP [--sp SLAVE_PORT] --db DATABASE --user USER --passwd PASSWORD"
+#		exit 1
+#		;;
+#	esac
+#}
+
+args=("$@")
+
+j=1
+for ((i=0; i < $#; i++))
+{
+  if [[ -z "${args[j]}" ]]
+    then
+      echo "No argument supplied"
+      break
+  fi
+
+
+
+#  echo "\$j = $j"
+#	$((i+1)): ${args[$i]}
+case ${args[i]} in
+    "--m")
+	    MASTER=${args[j]}
+	    echo "${args[j]}"
+      ;;
+    "--mp")
+	    MASTER_PORT=${args[j]}
+      ;;
+    "--s")
+	    SLAVE=${args[j]}
+      ;;
+    "--sp")
+	    SLAVE_PORT=${args[j]}
+      ;;
+    "--cn")
+	    CONNECTION_NAME=${args[j]}
+      ;;
+    "--user")
+	    MYSQL_USER=${args[j]}
+      ;;
+    "--passwd")
+	    PASSWORD=${args[j]}
+      ;;
+    *)
+      ;;
+  esac
+
+  ((j++))
+
 }
 
-for arg in "$@"
-do
-	set_argument "$arg"
-done
+#for arg in "$@"
+#do
+#	set_argument "$arg"
+#done
 
 
 : "${MASTER_PORT:=3306}"
@@ -66,8 +114,8 @@ echo "MASTER=$MASTER"
 echo "MASTER_PORT=$MASTER_PORT"
 echo "SLAVE=$SLAVE"
 echo "SLAVE_PORT=$SLAVE_PORT"
-echo "DATABASE=$DATABASE"
-echo "USER=$USER"
+echo "CONNECTION_NAME=$CONNECTION_NAME"
+echo "MYSQL_USER=$MYSQL_USER"
 
 
 #SLAVE='62.182.157.4'
@@ -75,8 +123,8 @@ echo "USER=$USER"
 
 #REPL_PASSWD='kF5m*&-@)_(@-fQ2l'
 
-MYSQL_MASTER="/usr/bin/mysql -u $USER -h $MASTER -P $MASTER_PORT -p$REPL_PASSWD"
-MYSQL_SLAVE="/usr/bin/mysql -u $USER -h $SLAVE -P $SLAVE_PORT -p$REPL_PASSWD"
+MYSQL_MASTER="/usr/bin/mysql -u $MYSQL_USER -h $MASTER -P $MASTER_PORT -p$PASSWORD"
+MYSQL_SLAVE="/usr/bin/mysql -u $MYSQL_USER -h $SLAVE -P $SLAVE_PORT -p$PASSWORD"
 
 ### END VARIABLES DEFENITION ###
 
