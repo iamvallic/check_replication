@@ -126,7 +126,20 @@ fi
 ## Check if IO thread is running ##
 if [ "$IO_IS_RUNNING" != "Yes" ]
 then
-    ERRORS=("${ERRORS[@]}" "I/O thread for reading the master's binary log is not running (Slave_IO_Running)")
+    echo -e "I/O thread for reading the master's binary log is not running (Slave_IO_Running)"
+    echo -e "Trying to fix it ..."
+    $MYSQL_SLAVE -e "start slave '$CONNECTION_NAME' io_thread;"
+    SLAVE_STATUS=($MYSQL_SLAVE -e "show slave '$CONNECTIN_NAME' status;")
+    IO_IS_RUNNING=$(grep "Slave_IO_Running" <<< "$SLAVE_STATUS" | awk '{ print $2 }')
+    if [ "$IO_IS_RUNNING" != "Yes" ]
+    then 
+	    ERRORS=("${ERRORS[@]}" "I/O thread for reading the master's binary log is not running (Slave_IO_Running)")
+	    echo -e "Failed to start Slave_IO_thread, to try to fix it manually run this SQL: "
+            echo -e "start slave '$CONNECTION_NAME' io_thread;"
+    else 
+	    echo -e "Success start Slave_IO_thread on slave $CONNECTION_NAME"
+    fi
+
 fi
 
 ## Check for SQL thread ##
