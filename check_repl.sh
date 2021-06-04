@@ -24,7 +24,7 @@ for ((i=0; i < $#; i++))
 {
   if [[ -z "${args[j]}" ]]
     then
-      echo "No argument supplied"
+#      echo "No argument supplied"
       break
   fi
 
@@ -89,7 +89,7 @@ LAST_ERRNO=$(grep "Last_Errno" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
 LAST_ERROR=$(grep "Last_Error" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
 SECONDS_BEHIND_MASTER=$( grep "Seconds_Behind_Master" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
 IO_IS_RUNNING=$(grep "Slave_IO_Running" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-SQL_IS_RUNNING=$(grep "Slave_SQL_Running" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
+SQL_IS_RUNNING=$(grep "Slave_SQL_Running:" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
 SLAVE_MASTER_LOG_FILE=$(grep " Master_Log_File" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
 SLAVE_READ_POS=$(grep "Read_Master_Log_Pos" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
 
@@ -144,6 +144,7 @@ fi
 ## Check for SQL thread ##
 if [ "$SQL_IS_RUNNING" != "Yes" ]
 then
+#	echo -e "SQL_IS_RUNNING == $SQL_IS_RUNNING"
     ERRORS=("${ERRORS[@]}" "SQL thread for executing events in the relay log is not running (Slave_SQL_Running)")
 fi
 
