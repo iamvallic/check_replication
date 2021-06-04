@@ -1,12 +1,18 @@
 # check_repl.sh
-## Bash script for checking Mariadb  replication status
+## The Bash script for checking Mariadb  replication status
 
-First of all it need to set executable:  
+This bash script waiting until replication is over and until slave has 0 seconds behind master.
+It also indicate replication errors and try to fix some of them
+
+
+### usage:
+Before using it need to set executable:  
 
 ```
 chown +x check_repl.sh
 ```
-### usage:
+Then run it with at least 5 arguments:
+
 ```
 ./check_repl.sh --m MASTER_IP [--mp MASTER_PORT] --s SLAVE_IP [--sp SLAVE_PORT] --cn SLAVE_CONNECTION_NAME --user USER --passwd PASSWORD
 ```
