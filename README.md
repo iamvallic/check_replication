@@ -15,7 +15,7 @@ chown +x check_repl.sh
 **SLAVE_IP** - IPv4 or FQDN of a mariadb replication slave  
 **SLAVE_PORT** - mariadb replication slave port if not set used 3306  
 **SLAVE_CONNECTION_NAME** - mariadb slave name  
-**USER** - mysql connection user. **User must have replication rights**
+**USER** - mysql connection user. **User must have replication rights**  
 **PASSWORD** -- mysql connection password  
 
 ### example: 
