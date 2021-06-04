@@ -1,5 +1,7 @@
 #!/bin/bash
 
+### CHECK ARGUMENTS ###
+
 if [[ "$#" -eq "0" ]]
   then
     echo -e "No arguments supplied"
@@ -13,49 +15,10 @@ if [[ "$#" -lt 10 ]]; then
     exit 1
 fi
 
-#if [ -z "$1" ]
-#  then
-#    echo "No argument supplied"
-#fi
 
-### VARIABLES ###
-#MASTER='62.182.157.2'
-
-
-
-#function set_argument {
-#	case "$1" in
-#	"--m")
-#		MASTER=$2
-#3		;;
-#	"--mp")
-#		MASTER_PORT=$2
-#		;;
-#	"--s")
-#		SLAVE=$2
-#		;;
-#	"--sp")
-#		SLAVE_PORT=$2
-#		;;
-#	"--db")
-#		DATABASE=$2
-#		;;
-#	"--user")
-#		USER=$2
-#		;;
-#	"--passwd")
-#		PASSWORD=$2
-#		;;
-#	*)
-#		echo -e "Unknown argument $1"
-#		echo -e "usage: $0 --m MASTER_IP [--mp MASTER_PORT] --s SLAVE_IP [--sp SLAVE_PORT] --db DATABASE --user USER --passwd PASSWORD"
-#		exit 1
-#		;;
-#	esac
-#}
+### SET VARIABLES ###
 
 args=("$@")
-
 j=1
 for ((i=0; i < $#; i++))
 {
@@ -65,14 +28,9 @@ for ((i=0; i < $#; i++))
       break
   fi
 
-
-
-#  echo "\$j = $j"
-#	$((i+1)): ${args[$i]}
 case ${args[i]} in
     "--m")
 	    MASTER=${args[j]}
-	    echo "${args[j]}"
       ;;
     "--mp")
 	    MASTER_PORT=${args[j]}
@@ -100,15 +58,10 @@ case ${args[i]} in
 
 }
 
-#for arg in "$@"
-#do
-#	set_argument "$arg"
-#done
-
-
 : "${MASTER_PORT:=3306}"
 : "${SLAVE_PORT:=3306}"
 
+### PRINT VARIABLE VALUES ###
 
 echo "MASTER=$MASTER"
 echo "MASTER_PORT=$MASTER_PORT"
@@ -118,15 +71,13 @@ echo "CONNECTION_NAME=$CONNECTION_NAME"
 echo "MYSQL_USER=$MYSQL_USER"
 
 
-#SLAVE='62.182.157.4'
-#SLAVE_PORT='3310'
-
-#REPL_PASSWD='kF5m*&-@)_(@-fQ2l'
-
 MYSQL_MASTER="/usr/bin/mysql -u $MYSQL_USER -h $MASTER -P $MASTER_PORT -p$PASSWORD"
 MYSQL_SLAVE="/usr/bin/mysql -u $MYSQL_USER -h $SLAVE -P $SLAVE_PORT -p$PASSWORD"
 
-### END VARIABLES DEFENITION ###
+### END VARIABLES DEFINITION ###
+
+
+### CHECK REPLICATION STATUS FUNCTION ###
 
 function check_reptication {
 
@@ -158,9 +109,9 @@ echo "SLAVE_READ_POS = $SLAVE_READ_POS"
 echo "MASTER_LOG_FILE = $MASTER_LOG_FILE"
 echo "MASTER_LOG_POS = $MASTER_LOG_POS"
 
-### CHECKS ###
 }
 
+### COLLECT ERRORS FUNCTION ###
 
 function check_for_errors {
 
@@ -207,46 +158,25 @@ fi
 
 }
 
+### PRINT ALL ERRORS FUNCTION ###
+
 function print_errors {
 	printf '%s\n' "${ERRORS[@]}"
 }
+
+### MAIN BODY ###
 
 check_reptication
 check_for_errors
 print_errors
 
+### do until no errors found with 5 minute interval
+
 while [[ "$SECONDS_BEHIND_MASTER" != "0" && "$SLAVE_READ_POS" != "$MASTER_LOG_POS" ]];
 do
 
 	echo "sleep 5 munutes ..."
-	sleep 1m
-#	STATUS_MASTER=$($MYSQL_MASTER -e "SHOW MASTER STATUS\G")
-#	STATUS_SLAVE=$($MYSQL_SLAVE -e "SHOW SLAVE 'PARSER' STATUS\G")
-#
-#	### SLAVE ###
-#	LAST_ERRNO=$(grep "Last_Errno" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-#	LAST_ERROR=$(grep "Last_Error" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-#	SECONDS_BEHIND_MASTER=$( grep "Seconds_Behind_Master" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-#	IO_IS_RUNNING=$(grep "Slave_IO_Running" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-#	SQL_IS_RUNNING=$(grep "Slave_SQL_Running" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-#	SLAVE_MASTER_LOG_FILE=$(grep " Master_Log_File" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-#	SLAVE_READ_POS=$(grep "Read_Master_Log_Pos" <<< "$STATUS_SLAVE" | awk '{ print $2 }')
-
-	### MASTER ###
-#	MASTER_LOG_FILE=$(grep " File" <<< "$STATUS_MASTER" | awk '{ print $2 }')
-#	MASTER_LOG_POS=$(grep " Position" <<< "$STATUS_MASTER" | awk '{ print $2 }')
-#	ERRORS=()
-
-	### PRINT VALUES ###
-#	echo "NEW VALUES:"
-#	echo "LAST_ERRNO = $LAST_ERRNO"
-#	echo "SECONDS_BEHIND_MASTER = $SECONDS_BEHIND_MASTER"
-#	echo "IO_IS_RUNNING = $IO_IS_RUNNING"
-#	echo "SQL_IS_RUNNING = $SQL_IS_RUNNING"
-#	echo "SLAVE_MASTER_LOG_FILE = $SLAVE_MASTER_LOG_FILE"
-#	echo "SLAVE_READ_POS = $SLAVE_READ_POS"
-#	echo "MASTER_LOG_FILE = $MASTER_LOG_FILE"
-#	echo "MASTER_LOG_POS = $MASTER_LOG_POS"
+	sleep 5m
 	check_reptication
 	check_for_errors
         print_errors
